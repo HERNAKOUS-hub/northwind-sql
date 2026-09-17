@@ -1,28 +1,25 @@
+# Sección 1. Fundamentos: filtrado y agregación
 
-Una sección por pregunta, las 20, en orden. Cada una con esta estructura:
 
-```markdown
-## Pregunta 7 — Clientes sin actividad comercial
+## Pregunta 1 — Catálogo comercial activo
 
-**Enunciado:** Lista todos los clientes con el número de pedidos que ha
-realizado cada uno...
+**Enunciado:** El equipo de ventas prepara la tarifa de la próxima campaña y necesita el catálogo depurado.
+
+Obtén los productos que **no** están descatalogados y cuyo precio unitario esté entre 10 y 50 euros, ambos incluidos. Muestra el nombre del producto y su precio redondeado a dos decimales, ordenado de mayor a menor precio.
 
 **Consulta:**
 
 ```sql
--- Clientes con su volumen de pedidos, incluidos los que nunca han comprado
-SELECT c.company_name AS cliente,
-       c.country      AS pais,
-       COUNT(o.order_id) AS num_pedidos
-FROM customers c
-LEFT JOIN orders o ON o.customer_id = c.customer_id
-GROUP BY c.company_name, c.country
-ORDER BY num_pedidos;
+SELECT product_name AS producto,
+       ROUND(unit_price::numeric, 2) AS precio
+FROM products
+WHERE discontinued = 0 
+  AND unit_price BETWEEN 10 AND 50
+ORDER BY precio DESC;
 ```
 
 **Resultado:**
 
-!Resultado pregunta 7
+!Resultado pregunta 1
 
-**Comentario:** He usado `COUNT(o.order_id)` en lugar de `COUNT(*)` porque...
-```
+**Comentario:** Se ha utilizado discontinued = 0 para asegurar que solo se muestran los productos activos, tal como indicaba la pista. El filtrado de precio se ha resuelto de forma limpia con la cláusula BETWEEN 10 AND 50, y finalmente se ha ordenado de forma descendente (DESC) utilizando directamente el alias de la columna precio.
