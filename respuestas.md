@@ -356,12 +356,10 @@ SELECT country AS pais FROM customers
 EXCEPT
 SELECT country FROM suppliers
 ORDER BY pais;
-
+```
 **Resultado:**
 
 ![Resultado pregunta 12ba](img/p012a.png)
-
-```
 **Consulta b (Ambos):**
 
 ```sql
@@ -377,6 +375,50 @@ ORDER BY pais;
 
 
 **Comentario:** Para resolver este ejercicio, usé `EXCEPT` en la primera consulta para restarle los países de proveedores a la lista de clientes. Para la segunda consulta lo mejor es usar `INTERSECT` porque extrae directamente los países que comparten ambas tablas. Al final simplemente hay que ordenar ambas con `ORDER BY pais`.
+
+
+
+
+# Sección 5. Subconsultas
+
+## Pregunta 13 — Clientes que nunca han comprado pescado
+
+**Enunciado:** El responsable de la categoría Seafood quiere una lista de cuentas sobre las que hacer campaña de captación.
+
+Localiza los clientes que **nunca** han incluido un producto de la categoría `'Seafood'` en ninguno de sus pedidos. Muestra el nombre del cliente, su país y el número total de pedidos que sí ha realizado, de mayor a menor.
+
+**Consulta:**
+
+```sql
+SELECT c.company_name AS cliente,
+       c.country AS pais,
+       COUNT(o.order_id) AS pedidos_realizados
+FROM customers c
+LEFT JOIN orders o USING (customer_id)
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM orders o2 
+    JOIN order_details od USING (order_id)
+    JOIN products p USING (product_id)
+    JOIN categories cat USING (category_id)
+    WHERE o2.customer_id = c.customer_id 
+      AND cat.category_name = 'Seafood'
+)
+GROUP BY c.company_name, c.country
+ORDER BY pedidos_realizados DESC;
+```
+
+**Resultado:**
+
+![Resultado pregunta 13](img/p13.png)
+
+**Comentario:** Para resolver este ejercicio, usé `WHERE NOT EXISTS` con una subconsulta para asegurarme de descartar a los clientes que tienen pedidos de 'Seafood'. Para contar sus ventas reales lo mejor es agrupar en la consulta principal y usar `COUNT(o.order_id)`. Al final simplemente hay que ordenar los resultados descendentemente con `ORDER BY pedidos_realizados DESC`.
+
+
+
+
+
+
 
 
 
