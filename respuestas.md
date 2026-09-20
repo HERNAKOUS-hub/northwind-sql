@@ -647,4 +647,42 @@ ORDER BY mes;
 
 
 
+## Pregunta 20 — Cuadro de mando anual por categoría
 
+**Enunciado:** Tabla con columnas f_1996, f_1997, f_1998, totales, peso porcentual y tendencia.
+
+**Consulta:**
+
+```sql
+WITH ventas_pivot AS (
+    SELECT COALESCE(c.category_name, 'TOTAL GENERAL') AS categoria,
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) FILTER (WHERE EXTRACT(YEAR FROM o.order_date) = 1996) AS f_1996,
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) FILTER (WHERE EXTRACT(YEAR FROM o.order_date) = 1997) AS f_1997,
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) FILTER (WHERE EXTRACT(YEAR FROM o.order_date) = 1998) AS f_1998,
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) AS total
+    FROM categories c
+    JOIN products USING (category_id)
+    JOIN order_details od USING (product_id)
+    JOIN orders o USING (order_id)
+    GROUP BY ROLLUP(c.category_name)
+)
+SELECT categoria,
+       COALESCE(f_1996, 0) AS f_1996,
+       COALESCE(f_1997, 0) AS f_1997,
+       COALESCE(f_1998, 0) AS f_1998,
+       total,
+       ROUND(total / MAX(total) OVER() * 100, 2) AS peso_pct,
+       CASE 
+           WHEN f_1997 IS NULL OR f_1998 IS NULL THEN 'N/A'
+           WHEN f_1998 > f_1997 THEN 'CRECE'
+           ELSE 'DECRECE'
+       END AS tendencia
+FROM ventas_pivot
+ORDER BY total DESC;
+```
+
+**Resultado:**
+
+![Resultado pregunta 20](img/p020.png)
+
+**Comentario:** Para resolver este ejercicio, usé `SUM(...) FILTER (WHERE ...)` para pivotar los datos de cada año en columnas separadas. Para sacar la fila final de totales globales lo mejor es usar `ROLLUP(c.category_name)`. Al final simplemente hay que calcular la tendencia con un `CASE WHEN` y el peso porcentual usando la función de ventana vacía `MAX(total) OVER()`.
