@@ -302,7 +302,7 @@ FULL JOIN proveedores_pais p USING (country);
 
 **Resultado:**
 
-![Resultado pregunta 10](img/p10.png)
+![Resultado pregunta 10](img/p010.png)
 
 **Comentario:** Para resolver este ejercicio, primero preparé las piezas del puzzle usando el bloque WITH para agrupar y contar por separado los clientes y proveedores de cada país. Después, junté ambas listas usando un FULL JOIN para no descartar absolutamente ningún país, existiera solo en una tabla o en ambas. Para clasificar el tipo de presencia, lo mejor es usar un CASE WHEN que evalúe los huecos generados por la unión (IS NULL) e imprima la etiqueta correspondiente ('SOLO CLIENTES', 'SOLO PROVEEDORES' o 'AMBOS'). Al final, simplemente hay que maquillar el resultado usando COALESCE para que los conteos vacíos se muestren como un 0 en el informe.
 
