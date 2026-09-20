@@ -419,6 +419,32 @@ ORDER BY pedidos_realizados DESC;
 
 
 
+## Pregunta 14 — Productos por encima de la media
+
+**Enunciado:** El comité de precios quiere identificar el segmento premium del catálogo.
+
+Muestra los productos activos cuyo precio unitario supere el precio medio de **todo** el catálogo. Incluye en cada fila el precio del producto, el precio medio general y la diferencia entre ambos, todo redondeado a dos decimales. Ordena por diferencia descendente.
+
+**Consulta:**
+
+```sql
+SELECT product_name AS producto,
+       ROUND(unit_price::numeric, 2) AS precio,
+       ROUND((SELECT AVG(unit_price::numeric) FROM products WHERE discontinued = 0), 2) AS precio_medio_catalogo,
+       ROUND(unit_price::numeric - (SELECT AVG(unit_price::numeric) FROM products WHERE discontinued = 0), 2) AS diferencia
+FROM products
+WHERE discontinued = 0 
+  AND unit_price > (SELECT AVG(unit_price) FROM products WHERE discontinued = 0)
+ORDER BY diferencia DESC;
+```
+
+**Resultado:**
+
+![Resultado pregunta 14](img/p014.png)
+
+**Comentario:** Para resolver este ejercicio, usé la subconsulta `(SELECT AVG(unit_price) FROM products WHERE discontinued = 0)` dentro del `WHERE` para filtrar los que están por encima de la media. Para mostrar el valor medio y la diferencia lo mejor es usar esa misma subconsulta en el `SELECT`. Al final simplemente hay que ordenar por la diferencia usando `ORDER BY diferencia DESC`.
+
+---
 
 
 
