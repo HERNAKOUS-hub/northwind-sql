@@ -519,3 +519,63 @@ WHERE p.unit_price = (
 **Comentario:** Para resolver esto, usé una subconsulta correlacionada en el `WHERE` igualando `p.unit_price = (SELECT MAX(...) WHERE p3.category_id = p.category_id)`. Para pintar el precio medio en el SELECT lo mejor es usar otra subconsulta correlacionada idéntica cambiando el MAX por AVG. Al final simplemente hay que dejar que se ejecute para que la evaluación cambie dinámicamente fila por fila.
 
 
+
+
+
+## Pregunta 17 — Segmentación ABC de la cartera
+
+**Enunciado:** Dirección quiere clasificar a los clientes en tres tramos de valor para asignar recursos comerciales.
+
+Usando expresiones de tabla común (CTE), construye una consulta que:
+
+1. Calcule la facturación total de cada cliente.
+2. Divida los clientes en **cuartiles** según esa facturación.
+3. Asigne una etiqueta de segmento: `'A - Estratégico'` al cuartil superior, `'B - Consolidado'` al segundo, `'C - Ocasional'` al tercero y `'D - Marginal'` al cuarto.
+4. Devuelva, por segmento, el número de clientes, la facturación total del segmento y el porcentaje que representa sobre el total de la compañía.
+**Consulta:**
+
+```sql
+WITH fact_clientes AS (
+    SELECT o.customer_id, 
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) AS fact_total
+    FROM orders o
+    JOIN order_details od USING (order_id)
+    GROUP BY o.customer_id
+),
+cuartiles AS (
+    SELECT customer_id, fact_total,
+           NTILE(4) OVER (ORDER BY fact_total DESC) AS cuartil
+    FROM fact_clientes
+),
+segmentos AS (
+    SELECT customer_id, -- ¡Columna añadida aquí para que pase al bloque final!
+           cuartil, 
+           fact_total,
+           CASE 
+               WHEN cuartil = 1 THEN 'A - Estratégico'
+               WHEN cuartil = 2 THEN 'B - Consolidado'
+               WHEN cuartil = 3 THEN 'C - Ocasional'
+               WHEN cuartil = 4 THEN 'D - Marginal'
+           END AS segmento
+    FROM cuartiles
+)
+SELECT segmento,
+       COUNT(customer_id) AS num_clientes,
+       SUM(fact_total) AS facturacion_segmento,
+       ROUND(SUM(fact_total) / SUM(SUM(fact_total)) OVER () * 100, 2) AS porcentaje_sobre_total
+FROM segmentos
+GROUP BY segmento
+ORDER BY segmento;
+```
+
+**Resultado:**
+
+![Resultado pregunta 17](img/p017.png)
+
+**Comentario:** Para resolver este ejercicio, primero preparé las piezas del puzzle usando el bloque WITH para calcular la facturación total histórica de cada cliente individual. Después, utilicé la función de ventana NTILE(4) para ordenar y dividir a toda esa cartera en cuatro grupos iguales según su volumen de compra. Para asignar el nombre del segmento, lo mejor es usar un CASE WHEN que traduzca ese número de cuartil a su etiqueta de negocio correspondiente ('A - Estratégico', 'B - Consolidado', etc.). Al final, simplemente hay que aplicar un segundo agrupamiento global para colapsar a los clientes en sus 4 segmentos definitivos, y usar una función SUM() OVER() que permite calcular rápidamente qué porcentaje exacto representa cada bloque sobre la facturación global de la compañía.
+
+
+
+
+
+
