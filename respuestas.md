@@ -338,7 +338,45 @@ ORDER BY origen, pais;
 
 
 
+## Pregunta 12 — Mercados con desequilibrio
 
+**Enunciado:** Compras y Ventas mantienen una discusión recurrente: ¿en qué países vendemos sin tener proveedor local, y en cuáles coincidimos?
+
+Resuelve las dos preguntas en dos consultas independientes:
+
+**a)** Países donde hay clientes pero **ningún** proveedor.
+**b)** Países donde hay **a la vez** clientes y proveedores.
+
+Ordena ambos resultados alfabéticamente.
+
+**Consulta a (Solo clientes):**
+
+```sql
+SELECT country AS pais FROM customers
+EXCEPT
+SELECT country FROM suppliers
+ORDER BY pais;
+
+**Resultado:**
+
+![Resultado pregunta 12ba](img/p012a.png)
+
+```
+**Consulta b (Ambos):**
+
+```sql
+SELECT country AS pais FROM customers
+INTERSECT
+SELECT country FROM suppliers
+ORDER BY pais;
+```
+
+**Resultado:**
+
+![Resultado pregunta 12b](img/p012b.png)
+
+
+**Comentario:** Para resolver este ejercicio, usé `EXCEPT` en la primera consulta para restarle los países de proveedores a la lista de clientes. Para la segunda consulta lo mejor es usar `INTERSECT` porque extrae directamente los países que comparten ambas tablas. Al final simplemente hay que ordenar ambas con `ORDER BY pais`.
 
 
 
