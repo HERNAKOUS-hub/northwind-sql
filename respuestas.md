@@ -22,7 +22,7 @@ ORDER BY precio DESC;
 
 ![Resultado pregunta 2](img/p01.png)
 
-**Comentario:** Para resolver esto, usé ``` WHERE discontinued = 0 ``` para asegurarme de filtrar solo los productos que siguen activos (0 = false; 1 = true). Para el "precio unitario esté entre 10 y 50 euros" lo mejor es usar el operador ```BETWEEN```. Al final simplemente hay que ordenar de mayor a menor precio usando el as que asignamos antes ```ROUND(unit_price::numeric, 2) AS precio```.
+**Comentario:** Para resolver este ejercicio, usé ``` WHERE discontinued = 0 ``` para asegurarme de filtrar solo los productos que siguen activos (0 = false; 1 = true). Para el "precio unitario esté entre 10 y 50 euros" lo mejor es usar el operador ```BETWEEN```. Al final simplemente hay que ordenar de mayor a menor precio usando el as que asignamos antes ```ROUND(unit_price::numeric, 2) AS precio```.
 
 ***
 ## Pregunta 2 — Concentración geográfica de la cartera
@@ -47,7 +47,7 @@ ORDER BY num_clientes DESC;
 
 ![Resultado pregunta 2](img/p02.png)
 
-**Comentario:** Para resolver esto, usé `GROUP BY country` para agrupar los registros por país. Para no contar la misma ciudad dos veces lo mejor es usar `COUNT(DISTINCT city)`. Al final simplemente hay que filtrar los que tienen 5 o más clientes usando `HAVING COUNT(customer_id) >= 5` porque la condición se aplica después de haber contado.
+**Comentario:** Para resolver este ejercicio, usé `GROUP BY country` para agrupar los registros por país. Para no contar la misma ciudad dos veces lo mejor es usar `COUNT(DISTINCT city)`. Al final simplemente hay que filtrar los que tienen 5 o más clientes usando `HAVING COUNT(customer_id) >= 5` porque la condición se aplica después de haber contado.
 
 ## Pregunta 3 — Alerta de reposición
 
@@ -75,7 +75,7 @@ WHERE discontinued = 0
 
 ![Resultado pregunta 3](img/p03.png)
 
-**Comentario:** Para resolver esto, usé `WHERE discontinued = 0 AND units_in_stock <= reorder_level` para asegurarme de filtrar los productos activos que están bajo mínimos. Para crear la columna de "situación" lo mejor es usar el condicional `CASE WHEN`(Funciona igual que un if - else) devolviendo 'CRÍTICO' si es 0, y 'AVISO' con el `ELSE`. Al final simplemente hay que mostrar los campos solicitados en el SELECT.
+**Comentario:** Para resolver este ejercicio, usé `WHERE discontinued = 0 AND units_in_stock <= reorder_level` para asegurarme de filtrar los productos activos que están bajo mínimos. Para crear la columna de "situación" lo mejor es usar el condicional `CASE WHEN`(Funciona igual que un if - else) devolviendo 'CRÍTICO' si es 0, y 'AVISO' con el `ELSE`. Al final simplemente hay que mostrar los campos solicitados en el SELECT.
 
 # Sección 2. INNER JOIN
 
@@ -107,7 +107,7 @@ ORDER BY s.country, p.product_name;
 
 
 
-**Comentario:** Para resolver esto, usé `INNER JOIN` para unir las tablas de productos, categorías y proveedores. Para filtrar por varios países a la vez lo mejor es usar el operador `IN ('Italy', 'France', 'Spain')`. Al final simplemente hay que ordenar primero por país y luego por producto usando `ORDER BY s.country, p.product_name`.
+**Comentario:** Para resolver este ejercicio, usé `INNER JOIN` para unir las tablas de productos, categorías y proveedores. Para filtrar por varios países a la vez lo mejor es usar el operador `IN ('Italy', 'France', 'Spain')`. Al final simplemente hay que ordenar primero por país y luego por producto usando `ORDER BY s.country, p.product_name`.
 
 
 
@@ -138,7 +138,7 @@ WHERE o.order_id = 10248;
 
 ![Resultado pregunta 5](img/p05.png)
 
-**Comentario:** Para resolver esto, usé `USING(order_id)` y `USING(product_id)`(es lo mismo que `INNER JOIN customers c ON o.customer_id = c.customer_id`) para unir las tablas. Para este tipo de uniones donde la columna se llama exactamente igual en ambas tablas lo mejor es usar `USING` porque queda más limpio. Al final simplemente hay que calcular el importe final aplicando la fórmula matemática `ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)`.
+**Comentario:** Para resolver este ejercicio, usé `USING(order_id)` y `USING(product_id)`(es lo mismo que `INNER JOIN customers c ON o.customer_id = c.customer_id`) para unir las tablas. Para este tipo de uniones donde la columna se llama exactamente igual en ambas tablas lo mejor es usar `USING` porque queda más limpio. Al final simplemente hay que calcular el importe final aplicando la fórmula matemática `ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)`.
 
 
 ## Pregunta 6 — Ranking de categorías por facturación
@@ -200,5 +200,30 @@ ORDER BY num_pedidos ASC;
 
 ![Resultado pregunta 7](img/p07.png)
 
-**Comentario:** Para resolver esto, usé `LEFT JOIN` desde customers para asegurarme de sacar todos los clientes, incluso los que no tienen pedidos. Para contar los pedidos lo mejor es usar `COUNT(o.order_id)` que devuelve 0 si es nulo. Al final simplemente hay que sustituir la fecha vacía usando la función `COALESCE(TO_CHAR(MAX(o.order_date), 'YYYY-MM-DD'), 'SIN PEDIDOS')`.
+**Comentario:** Para resolver este ejercicio, usé `LEFT JOIN` desde customers para asegurarme de sacar todos los clientes, incluso los que no tienen pedidos. Para contar los pedidos lo mejor es usar `COUNT(o.order_id)` que devuelve 0 si es nulo. Al final simplemente hay que sustituir la fecha vacía usando la función `COALESCE(TO_CHAR(MAX(o.order_date), 'YYYY-MM-DD'), 'SIN PEDIDOS')`.
 
+
+
+
+## Pregunta 8 — Organigrama de la fuerza de ventas
+
+**Enunciado:** Recursos Humanos necesita el organigrama del departamento comercial en formato tabla.
+
+Muestra cada empleado con su nombre completo, su cargo, el nombre completo de la persona a la que reporta y el cargo de esa persona. El empleado que no reporta a nadie debe aparecer también, con el texto `'DIRECCIÓN GENERAL'` en el campo del responsable.
+
+**Consulta:**
+
+```sql
+SELECT e.first_name || ' ' || e.last_name AS empleado,
+       e.title AS cargo,
+       COALESCE(j.first_name || ' ' || j.last_name, 'DIRECCIÓN GENERAL') AS responsable,
+       j.title AS cargo_responsable
+FROM employees e
+LEFT JOIN employees j ON e.reports_to = j.employee_id;
+```
+
+**Resultado:**
+
+![Resultado pregunta 8](img/p08.png)
+
+**Comentario:** Para resolver este ejercicio, usé `LEFT JOIN` para unir la tabla employees consigo misma asignándole los alias `e` (empleado) y `j` (jefe) sacando también los posibles valores nulos. Para juntar nombre y apellido lo mejor es usar el operador de concatenación `||`. Al final simplemente hay que poner 'DIRECCIÓN GENERAL' al que tiene null usando `COALESCE(..., 'DIRECCIÓN GENERAL')`.
