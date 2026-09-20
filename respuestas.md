@@ -309,6 +309,37 @@ FULL JOIN proveedores_pais p USING (country);
 
 
 
+# Sección 4. Operadores de conjunto
+
+## Pregunta 11 — Directorio unificado de contactos
+
+**Enunciado:** Sistemas va a migrar el CRM y necesita una exportación única con todos los contactos de la compañía, vengan de donde vengan.
+
+Construye una sola tabla que reúna los contactos de clientes, los de proveedores y los empleados. Cada fila debe indicar el origen (`'CLIENTE'`, `'PROVEEDOR'`, `'EMPLEADO'`), el nombre de la persona de contacto **en mayúsculas**, la organización a la que pertenece, la ciudad y el país. Para los empleados, la organización es el literal `'NORTHWIND TRADERS'` y el nombre de contacto se forma concatenando nombre y apellidos.
+
+Ordena por origen y luego por país.
+
+**Consulta:**
+
+```sql
+SELECT 'CLIENTE' AS origen, UPPER(contact_name) AS contacto, company_name AS organizacion, city AS ciudad, country AS pais FROM customers
+UNION ALL
+SELECT 'PROVEEDOR', UPPER(contact_name), company_name, city, country FROM suppliers
+UNION ALL
+SELECT 'EMPLEADO', UPPER(first_name || ' ' || last_name), 'NORTHWIND TRADERS', city, country FROM employees
+ORDER BY origen, pais;
+```
+
+**Resultado:**
+
+![Resultado pregunta 11](img/p011.png)
+
+**Comentario:** Para resolver este ejercicio, usé `UNION ALL` para apilar los tres SELECTs directamente. Para asegurar el formato del nombre en mayúsculas lo mejor es usar la función `UPPER()`. Al final simplemente hay que ordenar el resultado global usando `ORDER BY origen, pais`.
+
+
+
+
+
 
 
 
