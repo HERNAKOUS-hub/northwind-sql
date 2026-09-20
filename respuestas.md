@@ -613,6 +613,36 @@ ORDER BY categoria, posicion_en_categoria;
 
 
 
+## Pregunta 19 — Evolución mensual con acumulado y media móvil
+
+**Enunciado:** Para cada mes de 1997, calcula acumulado, media móvil de 3 meses y variación...
+
+**Consulta:**
+
+```sql
+WITH ventas_mes AS (
+    SELECT DATE_TRUNC('month', o.order_date)::date AS mes,
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) AS facturacion
+    FROM orders o
+    JOIN order_details od USING (order_id)
+    WHERE EXTRACT(YEAR FROM o.order_date) = 1997
+    GROUP BY 1
+)
+SELECT mes,
+       facturacion,
+       SUM(facturacion) OVER (ORDER BY mes) AS acumulado,
+       ROUND(AVG(facturacion) OVER (ORDER BY mes ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 2) AS media_movil_3m,
+       LAG(facturacion) OVER (ORDER BY mes) AS mes_anterior,
+       ROUND((facturacion - LAG(facturacion) OVER (ORDER BY mes)) / LAG(facturacion) OVER (ORDER BY mes) * 100, 2) AS variacion_pct
+FROM ventas_mes
+ORDER BY mes;
+```
+
+**Resultado:**
+
+![Resultado pregunta 19](img/p019.png)
+
+**Comentario:** Para resolver este ejercicio, usé una función de ventana definiendo un marco explícito con `ROWS BETWEEN 2 PRECEDING AND CURRENT ROW` para la media móvil. Para obtener la métrica del mes previo lo mejor es usar la función `LAG(facturacion) OVER (ORDER BY mes)`. Al final simplemente hay que mostrar los resultados mes a mes ordenando por fecha.
 
 
 
