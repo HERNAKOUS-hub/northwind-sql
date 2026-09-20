@@ -104,5 +104,38 @@ ORDER BY s.country, p.product_name;
 
 ![Resultado pregunta 4](img/p04.png)
 
+
+
+
 **Comentario:** Para resolver esto, usé `INNER JOIN` para unir las tablas de productos, categorías y proveedores. Para filtrar por varios países a la vez lo mejor es usar el operador `IN ('Italy', 'France', 'Spain')`. Al final simplemente hay que ordenar primero por país y luego por producto usando `ORDER BY s.country, p.product_name`.
 
+
+
+## Pregunta 5 — Detalle valorizado de un pedido
+
+**Enunciado:** Atención al cliente recibe una reclamación sobre el pedido **10248** y necesita reconstruir la factura línea a línea.
+
+Muestra, para ese pedido, el nombre del producto, el precio unitario aplicado, la cantidad, el descuento y el importe final de cada línea. Añade el nombre del cliente y la fecha del pedido.
+
+**Consulta:**
+
+```sql
+SELECT c.company_name AS cliente,
+       o.order_date AS fecha_pedido,
+       p.product_name AS producto,
+       od.unit_price AS precio_unitario,
+       od.quantity AS cantidad,
+       od.discount AS descuento,
+       ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2) AS importe_linea
+FROM orders o
+INNER JOIN customers c USING (customer_id)
+INNER JOIN order_details od USING (order_id)
+INNER JOIN products p USING (product_id)
+WHERE o.order_id = 10248;
+```
+
+**Resultado:**
+
+![Resultado pregunta 5](img/p05.png)
+
+**Comentario:** Para resolver esto, usé `USING(order_id)` y `USING(product_id)`(es lo mismo que `INNER JOIN customers c ON o.customer_id = c.customer_id`) para unir las tablas. Para este tipo de uniones donde la columna se llama exactamente igual en ambas tablas lo mejor es usar `USING` porque queda más limpio. Al final simplemente hay que calcular el importe final aplicando la fórmula matemática `ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)`.
