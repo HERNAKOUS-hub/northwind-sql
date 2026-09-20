@@ -273,7 +273,38 @@ ORDER BY c.category_name, a.anio;
 **Comentario:** Para resolver este ejercicio, primero preparé las piezas del puzzle usando el bloque WITH para aislar los años y pre-calcular las ventas. Después, construí el esqueleto del informe mezclando todas las categorías con todos los años usando un CROSS JOIN, asegurando así que se generaran las 24 filas posibles. A ese esqueleto inquebrantable le pegué los datos reales usando un LEFT JOIN. Como las categorías que no vendieron nada en un año específico generan huecos vacíos tras la unión, lo mejor es usar COALESCE(v.total, 0) para maquillar el resultado e imprimir un 0 en lugar del valor nulo.
 
 
+## Pregunta 10 — Mapa de países: clientes frente a proveedores
 
+**Enunciado:** Expansión internacional quiere una única tabla que muestre, para cada país en el que la compañía tiene presencia, cuántos clientes y cuántos proveedores hay. Deben aparecer los países que solo tienen clientes, los que solo tienen proveedores y los que tienen ambos.
+
+**Consulta:**
+
+```sql
+WITH clientes_pais AS (
+    SELECT country, COUNT(customer_id) AS num_clientes 
+    FROM customers GROUP BY country
+),
+proveedores_pais AS (
+    SELECT country, COUNT(supplier_id) AS num_proveedores 
+    FROM suppliers GROUP BY country
+)
+SELECT COALESCE(c.country, p.country) AS pais,
+       COALESCE(c.num_clientes, 0) AS num_clientes,
+       COALESCE(p.num_proveedores, 0) AS num_proveedores,
+       CASE 
+           WHEN p.num_proveedores IS NULL THEN 'SOLO CLIENTES'
+           WHEN c.num_clientes IS NULL THEN 'SOLO PROVEEDORES'
+           ELSE 'AMBOS'
+       END AS tipo_presencia
+FROM clientes_pais c
+FULL JOIN proveedores_pais p USING (country);
+```
+
+**Resultado:**
+
+![Resultado pregunta 10](img/p10.png)
+
+**Comentario:** Para resolver este ejercicio, primero preparé las piezas del puzzle usando el bloque WITH para agrupar y contar por separado los clientes y proveedores de cada país. Después, junté ambas listas usando un FULL JOIN para no descartar absolutamente ningún país, existiera solo en una tabla o en ambas. Para clasificar el tipo de presencia, lo mejor es usar un CASE WHEN que evalúe los huecos generados por la unión (IS NULL) e imprima la etiqueta correspondiente ('SOLO CLIENTES', 'SOLO PROVEEDORES' o 'AMBOS'). Al final, simplemente hay que maquillar el resultado usando COALESCE para que los conteos vacíos se muestren como un 0 en el informe.
 
 
 
