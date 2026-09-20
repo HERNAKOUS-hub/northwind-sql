@@ -48,3 +48,31 @@ ORDER BY num_clientes DESC;
 ![Resultado pregunta 2](img/p02.png)
 
 **Comentario:** Para resolver esto, usé `GROUP BY country` para agrupar los registros por país. Para no contar la misma ciudad dos veces lo mejor es usar `COUNT(DISTINCT city)`. Al final simplemente hay que filtrar los que tienen 5 o más clientes usando `HAVING COUNT(customer_id) >= 5` porque la condición se aplica después de haber contado.
+
+## Pregunta 3 — Alerta de reposición
+
+**Enunciado:** Logística necesita detectar qué referencias están en riesgo de rotura de stock.
+
+Localiza los productos activos cuyas unidades en stock sean **inferiores o iguales** a su nivel de reposición. Muestra el nombre, las unidades en stock, el nivel de reposición, las unidades ya pedidas al proveedor y una columna de texto que indique `'CRÍTICO'` cuando el stock sea 0 y `'AVISO'` en el resto de casos.
+
+**Consulta:**
+
+```sql
+SELECT product_name AS producto,
+       units_in_stock AS stock,
+       reorder_level AS nivel_reposicion,
+       units_on_order AS pedido_a_proveedor,
+       CASE 
+           WHEN units_in_stock = 0 THEN 'CRÍTICO'
+           ELSE 'AVISO'
+       END AS situacion
+FROM products
+WHERE discontinued = 0 
+  AND units_in_stock <= reorder_level;
+```
+
+**Resultado:**
+
+![Resultado pregunta 3](img/p03.png)
+
+**Comentario:** Para resolver esto, usé `WHERE discontinued = 0 AND units_in_stock <= reorder_level` para asegurarme de filtrar los productos activos que están bajo mínimos. Para crear la columna de "situación" lo mejor es usar el condicional `CASE WHEN`(Funciona igual que un if - else) devolviendo 'CRÍTICO' si es 0, y 'AVISO' con el `ELSE`. Al final simplemente hay que mostrar los campos solicitados en el SELECT.
