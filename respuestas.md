@@ -166,5 +166,39 @@ ORDER BY facturacion DESC;
 
 ![Resultado pregunta 6](img/p06.png)
 
+
+
 **Comentario:** Para resolver este ejercicio, usé `GROUP BY c.category_name` para agrupar por categoría. Para contar los productos únicos lo mejor es usar `COUNT(DISTINCT od.product_id)`. Al final simplemente hay que filtrar las categorías que superan los 100.000 euros usando `HAVING` (`WHERE` no funciona al hacer `GROUP BY`) y repitiendo la expresión completa del SUM para evitar errores con el alias.
+
+
+
+
+
+
+# Sección 3. Uniones externas, reflexivas y cruzadas
+
+## Pregunta 7 — Clientes sin actividad comercial
+
+**Enunciado:** Dirección comercial sospecha que hay cuentas abiertas que nunca han llegado a comprar.
+
+Lista **todos** los clientes con el número de pedidos que ha realizado cada uno y la fecha de su último pedido. Los clientes sin ningún pedido deben aparecer igualmente, con un 0 en el conteo y el texto `'SIN PEDIDOS'` en lugar de la fecha. Ordena de forma que los clientes inactivos aparezcan primero.
+
+**Consulta:**
+
+```sql
+SELECT c.company_name AS cliente,
+       c.country AS pais,
+       COUNT(o.order_id) AS num_pedidos,
+       COALESCE(TO_CHAR(MAX(o.order_date), 'YYYY-MM-DD'), 'SIN PEDIDOS') AS ultimo_pedido
+FROM customers c
+LEFT JOIN orders o USING (customer_id)
+GROUP BY c.company_name, c.country
+ORDER BY num_pedidos ASC;
+```
+
+**Resultado:**
+
+![Resultado pregunta 7](img/p07.png)
+
+**Comentario:** Para resolver esto, usé `LEFT JOIN` desde customers para asegurarme de sacar todos los clientes, incluso los que no tienen pedidos. Para contar los pedidos lo mejor es usar `COUNT(o.order_id)` que devuelve 0 si es nulo. Al final simplemente hay que sustituir la fecha vacía usando la función `COALESCE(TO_CHAR(MAX(o.order_date), 'YYYY-MM-DD'), 'SIN PEDIDOS')`.
 
