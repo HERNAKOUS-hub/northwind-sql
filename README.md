@@ -39,7 +39,7 @@ CREATE DATABASE northwind
 
 A continuación se muestra el modelo de la base de datos que refleja la estructura exacta de las tablas y sus conexiones físicas (claves ajenas) según constan en el motor tras ejecutar el script de instalación:
 
-![Diagrama ER](img/diagrama-er.png)
+![Diagrama](img/diagrama-er.png)
 
 ---
 
