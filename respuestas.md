@@ -227,3 +227,57 @@ LEFT JOIN employees j ON e.reports_to = j.employee_id;
 ![Resultado pregunta 8](img/p08.png)
 
 **Comentario:** Para resolver este ejercicio, usé `LEFT JOIN` para unir la tabla employees consigo misma asignándole los alias `e` (empleado) y `j` (jefe) sacando también los posibles valores nulos. Para juntar nombre y apellido lo mejor es usar el operador de concatenación `||`. Al final simplemente hay que poner 'DIRECCIÓN GENERAL' al que tiene null usando `COALESCE(..., 'DIRECCIÓN GENERAL')`.
+
+
+
+
+
+
+
+
+
+## Pregunta 9 — Rejilla de cobertura categoría × año
+
+**Enunciado:** Control de gestión quiere una rejilla completa de facturación por categoría y año, **sin huecos**: si una categoría no vendió nada en un año concreto, debe aparecer con un 0, no desaparecer de la tabla.
+
+Genera todas las combinaciones posibles de las 8 categorías con los 3 años del histórico (24 filas) y asocia a cada combinación su facturación. Ordena por categoría y año.
+
+**Consulta:**
+
+```sql
+WITH anios AS (
+    SELECT UNNEST(ARRAY[1996, 1997, 1998]) AS anio
+),
+ventas AS (
+    SELECT p.category_id,
+           EXTRACT(YEAR FROM o.order_date) AS anio,
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) AS total
+    FROM orders o
+    JOIN order_details od USING (order_id)
+    JOIN products p USING (product_id)
+    GROUP BY 1, 2
+)
+SELECT c.category_name AS categoria,
+       a.anio,
+       COALESCE(v.total, 0) AS facturacion
+FROM categories c
+CROSS JOIN anios a
+LEFT JOIN ventas v ON c.category_id = v.category_id AND a.anio = v.anio
+ORDER BY c.category_name, a.anio;
+```
+
+**Resultado:**
+
+![Resultado pregunta 9](img/p09.png)
+
+**Comentario:** Para resolver este ejercicio, primero preparé las piezas del puzzle usando el bloque WITH para aislar los años y pre-calcular las ventas. Después, construí el esqueleto del informe mezclando todas las categorías con todos los años usando un CROSS JOIN, asegurando así que se generaran las 24 filas posibles. A ese esqueleto inquebrantable le pegué los datos reales usando un LEFT JOIN. Como las categorías que no vendieron nada en un año específico generan huecos vacíos tras la unión, lo mejor es usar COALESCE(v.total, 0) para maquillar el resultado e imprimir un 0 en lugar del valor nulo.
+
+
+
+
+
+
+
+
+
+
