@@ -574,6 +574,45 @@ ORDER BY segmento;
 
 **Comentario:** Para resolver este ejercicio, primero preparé las piezas del puzzle usando el bloque WITH para calcular la facturación total histórica de cada cliente individual. Después, utilicé la función de ventana NTILE(4) para ordenar y dividir a toda esa cartera en cuatro grupos iguales según su volumen de compra. Para asignar el nombre del segmento, lo mejor es usar un CASE WHEN que traduzca ese número de cuartil a su etiqueta de negocio correspondiente ('A - Estratégico', 'B - Consolidado', etc.). Al final, simplemente hay que aplicar un segundo agrupamiento global para colapsar a los clientes en sus 4 segmentos definitivos, y usar una función SUM() OVER() que permite calcular rápidamente qué porcentaje exacto representa cada bloque sobre la facturación global de la compañía.
 
+# Sección 7. Funciones de ventana
+
+## Pregunta 18 — Los tres productos más vendidos de cada categoría
+
+**Enunciado:** El equipo de categoría necesita el podio de cada familia para negociar con proveedores.
+
+Para cada categoría, obtén los **tres productos con mayor facturación**. Muestra la categoría, la posición dentro de la categoría, el nombre del producto, las unidades vendidas y la facturación.
+
+Incluye además una columna con la posición global del producto en el conjunto de la compañía, para que se vea qué productos son líderes de su nicho pero irrelevantes en el total.
+
+**Consulta:**
+
+```sql
+WITH ranking AS (
+    SELECT c.category_name AS categoria,
+           p.product_name AS producto,
+           SUM(od.quantity) AS unidades,
+           SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) AS facturacion,
+           DENSE_RANK() OVER (PARTITION BY c.category_id ORDER BY SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) DESC) AS posicion_en_categoria,
+           DENSE_RANK() OVER (ORDER BY SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) DESC) AS posicion_global
+    FROM categories c
+    JOIN products p USING (category_id)
+    JOIN order_details od USING (product_id)
+    GROUP BY c.category_id, c.category_name, p.product_name
+)
+SELECT categoria, posicion_en_categoria, producto, unidades, facturacion, posicion_global
+FROM ranking
+WHERE posicion_en_categoria <= 3
+ORDER BY categoria, posicion_en_categoria;
+```
+
+**Resultado:**
+
+![Resultado pregunta 18](img/p018.png)
+
+**Comentario:** Para resolver este ejercicio, usé `DENSE_RANK() OVER (PARTITION BY c.category_id ...)` dentro de una CTE para calcular el top particionando por cada familia. Para el ranking global lo mejor es usar otro RANK pero sin `PARTITION BY`. Al final simplemente hay que filtrar los tres primeros en la consulta principal usando `WHERE posicion_en_categoria <= 3`.
+
+
+
 
 
 
