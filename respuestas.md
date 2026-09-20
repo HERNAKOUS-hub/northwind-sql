@@ -139,3 +139,32 @@ WHERE o.order_id = 10248;
 ![Resultado pregunta 5](img/p05.png)
 
 **Comentario:** Para resolver esto, usé `USING(order_id)` y `USING(product_id)`(es lo mismo que `INNER JOIN customers c ON o.customer_id = c.customer_id`) para unir las tablas. Para este tipo de uniones donde la columna se llama exactamente igual en ambas tablas lo mejor es usar `USING` porque queda más limpio. Al final simplemente hay que calcular el importe final aplicando la fórmula matemática `ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)`.
+
+
+## Pregunta 6 — Ranking de categorías por facturación
+
+**Enunciado:** Comité de dirección: ¿qué familias de producto sostienen realmente el negocio?
+
+Calcula la facturación total de cada categoría durante toda la historia de la compañía. Muestra el nombre de la categoría, el número de líneas de pedido que ha generado, el número de productos distintos vendidos y la facturación total. Incluye únicamente las categorías que superen los **100.000 euros** de facturación, ordenadas de mayor a menor.
+
+**Consulta:**
+
+```sql
+SELECT c.category_name AS categoria,
+       COUNT(od.order_id) AS num_lineas,
+       COUNT(DISTINCT od.product_id) AS num_productos,
+       SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) AS facturacion
+FROM categories c
+INNER JOIN products p USING (category_id)
+INNER JOIN order_details od USING (product_id)
+GROUP BY c.category_name
+HAVING SUM(ROUND((od.unit_price::numeric) * od.quantity * (1 - od.discount::numeric), 2)) > 100000
+ORDER BY facturacion DESC;
+```
+
+**Resultado:**
+
+![Resultado pregunta 6](img/p06.png)
+
+**Comentario:** Para resolver este ejercicio, usé `GROUP BY c.category_name` para agrupar por categoría. Para contar los productos únicos lo mejor es usar `COUNT(DISTINCT od.product_id)`. Al final simplemente hay que filtrar las categorías que superan los 100.000 euros usando `HAVING` (`WHERE` no funciona al hacer `GROUP BY`) y repitiendo la expresión completa del SUM para evitar errores con el alias.
+
