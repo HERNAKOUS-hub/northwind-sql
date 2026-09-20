@@ -444,8 +444,40 @@ ORDER BY diferencia DESC;
 
 **Comentario:** Para resolver este ejercicio, usé la subconsulta `(SELECT AVG(unit_price) FROM products WHERE discontinued = 0)` dentro del `WHERE` para filtrar los que están por encima de la media. Para mostrar el valor medio y la diferencia lo mejor es usar esa misma subconsulta en el `SELECT`. Al final simplemente hay que ordenar por la diferencia usando `ORDER BY diferencia DESC`.
 
----
 
 
+## Pregunta 15 — Ticket medio por cliente
 
+**Enunciado:** Dirección comercial quiere segmentar la cartera por valor medio de pedido, no por volumen total.
+
+Calcula, para cada cliente que haya comprado alguna vez, el número de pedidos, el importe total acumulado y el importe medio por pedido. Muestra los 15 clientes con mayor ticket medio.
+
+El cálculo tiene dos niveles: primero hay que obtener el importe de cada pedido sumando sus líneas, y solo después promediar esos importes por cliente. **Promediar directamente las líneas daría un resultado distinto y equivocado.**
+
+**Consulta:**
+
+```sql
+SELECT c.company_name AS cliente,
+       c.country AS pais,
+       COUNT(t.order_id) AS num_pedidos,
+       SUM(t.importe_pedido) AS importe_total,
+       ROUND(AVG(t.importe_pedido), 2) AS ticket_medio
+FROM customers c
+JOIN (
+    SELECT order_id, customer_id, 
+           SUM(ROUND((unit_price::numeric) * quantity * (1 - discount::numeric), 2)) AS importe_pedido
+    FROM orders 
+    JOIN order_details USING (order_id)
+    GROUP BY order_id, customer_id
+) t USING (customer_id)
+GROUP BY c.company_name, c.country
+ORDER BY ticket_medio DESC
+LIMIT 15;
+```
+
+**Resultado:**
+
+![Resultado pregunta 15](img/p15.png)
+
+**Comentario:** Para resolver este ejercicio, usé una subconsulta en el `FROM` para sumar primero el importe a nivel de pedido individual. Para calcular la media por cliente lo mejor es agrupar en la consulta principal y usar `AVG(t.importe_pedido)`. Al final simplemente hay que sacar los 15 mayores usando `LIMIT 15`.
 
