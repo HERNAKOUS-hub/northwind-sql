@@ -410,7 +410,7 @@ ORDER BY pedidos_realizados DESC;
 
 **Resultado:**
 
-![Resultado pregunta 13](img/p13.png)
+![Resultado pregunta 13](img/p013.png)
 
 **Comentario:** Para resolver este ejercicio, usé `WHERE NOT EXISTS` con una subconsulta para asegurarme de descartar a los clientes que tienen pedidos de 'Seafood'. Para contar sus ventas reales lo mejor es agrupar en la consulta principal y usar `COUNT(o.order_id)`. Al final simplemente hay que ordenar los resultados descendentemente con `ORDER BY pedidos_realizados DESC`.
 
@@ -477,7 +477,45 @@ LIMIT 15;
 
 **Resultado:**
 
-![Resultado pregunta 15](img/p15.png)
+![Resultado pregunta 15](img/p015.png)
 
 **Comentario:** Para resolver este ejercicio, usé una subconsulta en el `FROM` para sumar primero el importe a nivel de pedido individual. Para calcular la media por cliente lo mejor es agrupar en la consulta principal y usar `AVG(t.importe_pedido)`. Al final simplemente hay que sacar los 15 mayores usando `LIMIT 15`.
+
+
+
+
+# Sección 6. Subconsultas correlacionadas y CTE
+
+## Pregunta 16 — El producto más caro de cada categoría
+
+**Enunciado:** El equipo de compras quiere revisar el posicionamiento de precio en cada familia.
+
+Para cada categoría, muestra el producto con el precio unitario más alto. Incluye el nombre de la categoría, el nombre del producto, su precio y el precio medio de su categoría.
+
+Resuélvelo con una **subconsulta correlacionada**: para cada producto, comprueba si su precio coincide con el máximo de su propia categoría.
+
+**Consulta:**
+
+```sql
+SELECT c.category_name AS categoria,
+       p.product_name AS producto,
+       ROUND(p.unit_price::numeric, 2) AS precio,
+       ROUND((SELECT AVG(unit_price::numeric) 
+              FROM products p2 
+              WHERE p2.category_id = p.category_id), 2) AS precio_medio_categoria
+FROM products p
+JOIN categories c USING (category_id)
+WHERE p.unit_price = (
+    SELECT MAX(unit_price) 
+    FROM products p3 
+    WHERE p3.category_id = p.category_id
+);
+```
+
+**Resultado:**
+
+![Resultado pregunta 16](img/p016.png)
+
+**Comentario:** Para resolver esto, usé una subconsulta correlacionada en el `WHERE` igualando `p.unit_price = (SELECT MAX(...) WHERE p3.category_id = p.category_id)`. Para pintar el precio medio en el SELECT lo mejor es usar otra subconsulta correlacionada idéntica cambiando el MAX por AVG. Al final simplemente hay que dejar que se ejecute para que la evaluación cambie dinámicamente fila por fila.
+
 
