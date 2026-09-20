@@ -76,3 +76,33 @@ WHERE discontinued = 0
 ![Resultado pregunta 3](img/p03.png)
 
 **Comentario:** Para resolver esto, usé `WHERE discontinued = 0 AND units_in_stock <= reorder_level` para asegurarme de filtrar los productos activos que están bajo mínimos. Para crear la columna de "situación" lo mejor es usar el condicional `CASE WHEN`(Funciona igual que un if - else) devolviendo 'CRÍTICO' si es 0, y 'AVISO' con el `ELSE`. Al final simplemente hay que mostrar los campos solicitados en el SELECT.
+
+# Sección 2. INNER JOIN
+
+## Pregunta 4 — Ficha completa de producto
+
+**Enunciado:** Marketing va a rehacer el catálogo impreso y necesita cada producto con su categoría y los datos de contacto de quien lo suministra.
+
+Para los productos suministrados por empresas de **Italia, Francia o España**, muestra el nombre del producto, el nombre de la categoría, el nombre del proveedor, su país y su ciudad. Ordena por país y, dentro de cada país, por nombre de producto.
+
+**Consulta:**
+
+```sql
+SELECT p.product_name AS producto,
+       c.category_name AS categoria,
+       s.company_name AS proveedor,
+       s.country AS pais,
+       s.city AS ciudad
+FROM products p
+INNER JOIN categories c ON p.category_id = c.category_id
+INNER JOIN suppliers s ON p.supplier_id = s.supplier_id
+WHERE s.country IN ('Italy', 'France', 'Spain')
+ORDER BY s.country, p.product_name;
+```
+
+**Resultado:**
+
+![Resultado pregunta 4](img/p04.png)
+
+**Comentario:** Para resolver esto, usé `INNER JOIN` para unir las tablas de productos, categorías y proveedores. Para filtrar por varios países a la vez lo mejor es usar el operador `IN ('Italy', 'France', 'Spain')`. Al final simplemente hay que ordenar primero por país y luego por producto usando `ORDER BY s.country, p.product_name`.
+
